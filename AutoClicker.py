@@ -42,11 +42,15 @@ class ClickMouse(threading.Thread):
         while self.program_running:
 
             while self.running:
+                cycle_start = time.perf_counter()
                 mouse.press(self.button)
                 time.sleep(click_duration)
                 mouse.release(self.button)
-                
-                time.sleep(self.delay)
+
+                elapsed = time.perf_counter() - cycle_start
+                remaining = self.delay - elapsed
+                if remaining > 0:
+                    time.sleep(remaining)
             time.sleep(0.1)
 
 mouse = Controller()
@@ -128,14 +132,20 @@ def submit_input():
     user_text = entry.get()
 
     if user_text == "":
-        output_label.config(text="Please enter a delay")
+        output_label.config(text="Please enter an interval")
         return
 
     new_delay = float(user_text)
 
+    if new_delay < 0.009:
+        output_label.config(
+            text="Minimum interval is 0.009 seconds"
+        )
+        return
+
     click_thread.delay = new_delay
 
-    output_label.config(text=f"Delay saved: {new_delay} seconds")
+    output_label.config(text=f"Interval saved: {new_delay} seconds")
 
 def only_numbers(value):
     if value == "":
@@ -185,7 +195,7 @@ input_frame.grid(row=0, column=0, pady=10)
 
 delay_label = tk.Label(
     input_frame, 
-    text="Delay between clicks:"
+    text="Interval between clicks:"
 )
 delay_label.grid(row=0, column=0, padx=5, pady=10)
 

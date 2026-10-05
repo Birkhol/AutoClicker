@@ -11,13 +11,14 @@ button = Button.left
 
 start_stop_key = KeyCode(char="r")
 binding_key = False
+waiting_for_release = False
 exit_key = KeyCode(char="t")
 
 
 # Auto Clicker
 class ClickMouse(threading.Thread):
     def __init__(self, delay, button):
-        super().__init__()
+        super().__init__(daemon=True)
 
         self.delay = delay
         self.button = button
@@ -54,6 +55,7 @@ click_thread.start()
 def on_press(key):
     global start_stop_key
     global binding_key
+    global waiting_for_release
 
     if binding_key:
         if key == Key.esc:
@@ -63,8 +65,12 @@ def on_press(key):
         
         start_stop_key = key
         binding_key = False
+        waiting_for_release = True
 
         root.after(0, update_key_label, key)
+
+    if waiting_for_release:
+        return
 
     if key == start_stop_key:
 
@@ -81,7 +87,16 @@ def on_press(key):
         listener.stop()
         print("[INFO] Program exiting")
 
-listener = Listener(on_press=on_press)
+def on_release(key):
+    global waiting_for_release
+
+    if waiting_for_release and key == start_stop_key:
+        waiting_for_release = False
+
+listener = Listener(
+    on_press=on_press,
+    on_release=on_release
+)
 listener.start()
 
 
@@ -94,6 +109,12 @@ root.maxsize(600, 500)
 root.geometry("400x300+50+50")
 root.columnconfigure(0, weight=1)
 root.iconbitmap("AutoClicker.ico")
+
+def close_program():
+    click_thread.exit()
+    listener.stop()
+    root.destroy()
+root.protocol("WM_DELETE_WINDOW", close_program)
 
 
 # GUI Functions
@@ -147,6 +168,7 @@ def get_key_name(key):
         return key.char.upper()
     else:
         return str(key).replace("Key.", "").upper()
+
 
 # GUI Components
 validate_numbers = root.register(only_numbers)

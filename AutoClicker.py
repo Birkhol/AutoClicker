@@ -90,6 +90,8 @@ def on_press(key):
             click_thread.start_clicking()
             print("[INFO] Clicker started")
 
+        root.after(0, update_status)
+
     elif key == exit_key:
         click_thread.exit()
         listener.stop()
@@ -115,7 +117,7 @@ root = tk.Tk()
 root.title("Auto Clicker")
 root.minsize(200, 200)
 root.maxsize(600, 500)
-root.geometry("400x300+50+50")
+root.geometry("400x250+50+50")
 root.columnconfigure(0, weight=1)
 root.iconbitmap("AutoClicker.ico")
 
@@ -185,6 +187,18 @@ def get_key_name(key):
     else:
         return str(key).replace("Key.", "").upper()
 
+def update_status():
+    if click_thread.running:
+        status_label.config(
+            text="● Clicking",
+            fg="green"
+        )
+    else:
+        status_label.config(
+            text="● Stopped",
+            fg="red"
+        )
+
 #--------------------------
 # GUI Components
 #--------------------------
@@ -205,16 +219,14 @@ entry = tk.Entry(
     validatecommand=(validate_numbers, "%P"),
 
     width=10,
-    insertbackground="white"
+    insertbackground="black"
 )
 entry.grid(row=0, column=1, padx=5, pady=10)
 
 submit_button = tk.Button(
     input_frame, 
     text="Save", 
-    command=submit_input,
-
-
+    command=submit_input
 )
 submit_button.grid(row=0, column=2, padx=5, pady=10)
 
@@ -248,7 +260,14 @@ output_label = tk.Label(
     root, 
     text="Press R to start/stop clicking"
 )
-output_label.grid(row=3, column=0, pady=30)
+output_label.grid(row=3, column=0, pady=20)
+
+status_label = tk.Label(
+    root,
+    text="● Stopped",
+    fg="red"
+)
+status_label.grid(row=4, column=0, pady=8)
 
 #--------------------------
 # Start GUI

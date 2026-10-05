@@ -2,7 +2,7 @@ import tkinter as tk
 import time
 import threading
 from pynput.mouse import Button, Controller
-from pynput.keyboard import Listener, KeyCode
+from pynput.keyboard import Listener, KeyCode, Key
 
 # Configuration
 delay = 0.01
@@ -10,6 +10,7 @@ click_duration = 0.008
 button = Button.left
 
 start_stop_key = KeyCode(char="r")
+binding_key = False
 exit_key = KeyCode(char="t")
 
 
@@ -51,6 +52,20 @@ click_thread.start()
 
 # Keyboard controls
 def on_press(key):
+    global start_stop_key
+    global binding_key
+
+    if binding_key:
+        if key == Key.esc:
+            binding_key = False
+            root.after(0, cancel_key_binding)
+            return
+        
+        start_stop_key = key
+        binding_key = False
+
+        root.after(0, update_key_label, key)
+
     if key == start_stop_key:
 
         if click_thread.running:
@@ -105,6 +120,33 @@ def only_numbers(value):
     except ValueError:
         return False
 
+def start_key_binding():
+    global binding_key
+
+    binding_key = True
+    key_label.config(text="Press any key...")
+
+def update_key_label(key):
+    key_name = get_key_name(key)
+
+    key_label.config(text=key_name)
+
+    output_label.config(
+        text=f"Press {key_name} to start/stop"
+    )
+
+def cancel_key_binding():
+    key_label.config(text=get_key_name(start_stop_key))
+
+    output_label.config(
+        text=f"Keybinding cancelled"
+    )
+
+def get_key_name(key):
+    if isinstance(key, KeyCode):
+        return key.char.upper()
+    else:
+        return str(key).replace("Key.", "").upper()
 
 # GUI Components
 validate_numbers = root.register(only_numbers)
@@ -128,18 +170,42 @@ entry.grid(row=0, column=1, padx=5, pady=10)
 
 entry.insert(0, str(delay))
 
+keybind_frame = tk.Frame(root)
+keybind_frame.grid(row=1, column=0, pady=10)
+
+keybind_text = tk.Label(
+    keybind_frame,
+    text="Start/Stop key:"
+)
+keybind_text.grid(row=0, column=0, padx=5)
+
+key_label = tk.Label(
+    keybind_frame,
+    text="R",
+    width=8,
+    relief="sunken"
+)
+key_label.grid(row=0, column=1, padx=5)
+
+bind_button = tk.Button(
+    keybind_frame,
+    text="Bind Key",
+    command=start_key_binding
+)
+bind_button.grid(row=0, column=2, padx=5)
+
 submit_button = tk.Button(
     root, 
     text="Save", 
     command=submit_input
 )
-submit_button.grid(row=1, column=0, pady=5)
+submit_button.grid(row=2, column=0, pady=5)
 
 output_label = tk.Label(
     root, 
     text="Press R to start/stop"
 )
-output_label.grid(row=2, column=0, pady=10)
+output_label.grid(row=3, column=0, pady=10)
 
 
 # Start GUI

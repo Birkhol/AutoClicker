@@ -4,7 +4,9 @@ import threading
 from pynput.mouse import Button, Controller
 from pynput.keyboard import Listener, KeyCode, Key
 
+#--------------------------
 # Configuration
+#--------------------------
 delay = 0.01
 click_duration = 0.008
 button = Button.left
@@ -14,8 +16,9 @@ binding_key = False
 waiting_for_release = False
 exit_key = KeyCode(char="t")
 
-
+#--------------------------
 # Auto Clicker
+#--------------------------
 class ClickMouse(threading.Thread):
     def __init__(self, delay, button):
         super().__init__(daemon=True)
@@ -50,8 +53,9 @@ mouse = Controller()
 click_thread = ClickMouse(delay, button)
 click_thread.start()
 
-
+#--------------------------
 # Keyboard controls
+#--------------------------
 def on_press(key):
     global start_stop_key
     global binding_key
@@ -99,8 +103,9 @@ listener = Listener(
 )
 listener.start()
 
-
+#--------------------------
 # GUI
+#--------------------------
 root = tk.Tk()
 
 root.title("Auto Clicker")
@@ -116,8 +121,9 @@ def close_program():
     root.destroy()
 root.protocol("WM_DELETE_WINDOW", close_program)
 
-
+#--------------------------
 # GUI Functions
+#--------------------------
 def submit_input():
     user_text = entry.get()
 
@@ -169,8 +175,9 @@ def get_key_name(key):
     else:
         return str(key).replace("Key.", "").upper()
 
-
+#--------------------------
 # GUI Components
+#--------------------------
 validate_numbers = root.register(only_numbers)
 
 input_frame = tk.Frame(root)
@@ -186,9 +193,20 @@ entry = tk.Entry(
     input_frame,
     validate="key",
     validatecommand=(validate_numbers, "%P"),
-    width=10
+
+    width=10,
+    insertbackground="white"
 )
 entry.grid(row=0, column=1, padx=5, pady=10)
+
+submit_button = tk.Button(
+    input_frame, 
+    text="Save", 
+    command=submit_input,
+
+
+)
+submit_button.grid(row=0, column=2, padx=5, pady=10)
 
 entry.insert(0, str(delay))
 
@@ -204,7 +222,7 @@ keybind_text.grid(row=0, column=0, padx=5)
 key_label = tk.Label(
     keybind_frame,
     text="R",
-    width=8,
+    width=6,
     relief="sunken"
 )
 key_label.grid(row=0, column=1, padx=5)
@@ -216,19 +234,13 @@ bind_button = tk.Button(
 )
 bind_button.grid(row=0, column=2, padx=5)
 
-submit_button = tk.Button(
-    root, 
-    text="Save", 
-    command=submit_input
-)
-submit_button.grid(row=2, column=0, pady=5)
-
 output_label = tk.Label(
     root, 
-    text="Press R to start/stop"
+    text="Press R to start/stop clicking"
 )
-output_label.grid(row=3, column=0, pady=10)
+output_label.grid(row=3, column=0, pady=30)
 
-
+#--------------------------
 # Start GUI
+#--------------------------
 root.mainloop()

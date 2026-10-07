@@ -62,10 +62,17 @@ SETTINGS_FILE = os.path.join(
 
 def serialize_key(key):
     if isinstance(key, KeyCode):
-        return {
-            "type": "char",
-            "value": key.char
-        }
+        if key.char is not None:
+            return {
+                "type": "char",
+                "value": key.char
+            }
+
+        if key.vk is not None:
+            return {
+                "type": "vk",
+                "value": key.vk
+            }
 
     return {
         "type": "special",
@@ -77,6 +84,9 @@ def deserialize_key(data):
     try:
         if data["type"] == "char":
             return KeyCode(char=data["value"])
+
+        if data["type"] == "vk":
+            return KeyCode.from_vk(data["value"])
 
         if data["type"] == "special":
             return getattr(Key, data["value"])
@@ -315,11 +325,46 @@ def cancel_key_binding():
         text="Keybinding cancelled"
     )
 
+def keys_match(key1, key2):
+    if isinstance(key1, KeyCode) and isinstance(key2, KeyCode):
+        if key1.char is not None and key2.char is not None:
+            return key1.char == key2.char
+
+        if key1.vk is not None and key2.vk is not None:
+            return key1.vk == key2.vk
+
+        return False
+
+    return key1 == key2
 
 def get_key_name(key):
     if isinstance(key, KeyCode):
         if key.char:
             return key.char.upper()
+
+        if key.vk is not None:
+            numpad_keys = {
+                96: "NUM 0",
+                97: "NUM 1",
+                98: "NUM 2",
+                99: "NUM 3",
+                100: "NUM 4",
+                101: "NUM 5",
+                102: "NUM 6",
+                103: "NUM 7",
+                104: "NUM 8",
+                105: "NUM 9",
+                106: "NUM *",
+                107: "NUM +",
+                109: "NUM -",
+                110: "NUM .",
+                111: "NUM /"
+            }
+
+            return numpad_keys.get(
+                key.vk,
+                f"KEY {key.vk}"
+            )
 
         return "UNKNOWN"
 
@@ -383,7 +428,7 @@ def on_press(key):
         return
 
     # Start / stop clicking
-    if key == start_stop_key:
+    if keys_match(key, start_stop_key):
 
         if click_thread.running:
             click_thread.stop_clicking()
@@ -410,7 +455,7 @@ def on_release(key):
 
     if (
         waiting_for_release
-        and key == start_stop_key
+        and keys_match(key, start_stop_key)
     ):
         waiting_for_release = False
 

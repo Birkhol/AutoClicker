@@ -1,9 +1,12 @@
 import tkinter as tk
+import customtkinter as ctk
 import time
 import threading
 import json
 import os
 import sys
+import urllib.request
+import webbrowser
 
 from pynput.mouse import Button, Controller
 from pynput.keyboard import Listener, KeyCode, Key
@@ -26,6 +29,17 @@ start_stop_key = DEFAULT_KEY
 
 binding_key = False
 waiting_for_release = False
+
+# Update
+APP_VERSION = "1.2"
+
+GITHUB_OWNER = "Birkhol"
+GITHUB_REPO = "AutoClicker"
+
+GITHUB_API_URL = (
+    f"https://api.github.com/repos/"
+    f"{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
+)
 
 # --------------------------
 # Resources
@@ -213,6 +227,75 @@ def save_settings():
 
 
 # --------------------------
+# Check for updates
+# --------------------------
+
+def version_tuple(version):
+    version = version.lower().lstrip("v")
+
+    return tuple(
+        int(part)
+        for part in version.split(".")
+    )
+
+
+def check_for_updates():
+    try:
+        request = urllib.request.Request(
+            GITHUB_API_URL,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "Birkhol-AutoClicker"
+            }
+        )
+
+        with urllib.request.urlopen(
+            request,
+            timeout=5
+        ) as response:
+            data = json.loads(
+                response.read().decode("utf-8")
+            )
+
+        latest_version = data["tag_name"]
+        release_url = data["html_url"]
+
+        if (
+            version_tuple(latest_version)
+            > version_tuple(APP_VERSION)
+        ):
+            root.after(
+                0,
+                show_update_available,
+                latest_version,
+                release_url
+            )
+
+    except Exception as error:
+        print(
+            f"[UPDATE] Could not check for updates: {error}"
+        )
+
+
+def show_update_available(
+    latest_version,
+    release_url
+):
+    update_button.configure(
+        text=f"Update available: {latest_version}",
+        command=lambda: webbrowser.open(release_url)
+    )
+
+    update_button.grid()
+
+
+def start_update_check():
+    threading.Thread(
+        target=check_for_updates,
+        daemon=True
+    ).start()
+
+# --------------------------
 # GUI
 # --------------------------
 
@@ -221,7 +304,7 @@ root = tk.Tk()
 root.title("Auto Clicker")
 root.minsize(200, 200)
 root.maxsize(600, 500)
-root.geometry("400x250+50+50")
+root.geometry("400x260+50+50")
 
 root.columnconfigure(
     0,
@@ -559,6 +642,25 @@ submit_button.grid(
     pady=10
 )
 
+# Only shows if update is available
+update_button = ctk.CTkButton(
+    root,
+    text="Update available",
+    fg_color="navy",
+    text_color="white",
+    font=ctk.CTkFont(family="Segoe UI"),
+    cursor="hand2",
+    corner_radius=10
+)
+
+update_button.grid(
+    row=5,
+    column=0,
+    pady=5
+)
+
+update_button.grid_remove()
+
 
 # --------------------------
 # Keybinding
@@ -648,5 +750,7 @@ status_label.grid(
 # --------------------------
 # Start GUI
 # --------------------------
+
+start_update_check()
 
 root.mainloop()

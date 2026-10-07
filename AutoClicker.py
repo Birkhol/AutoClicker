@@ -1,10 +1,19 @@
+import sys
+import ctypes
+
+# Enable DPI awareness on Windows
+if sys.platform == "win32":
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except (AttributeError, OSError):
+        pass
+
 import tkinter as tk
 import customtkinter as ctk
 import time
 import threading
 import json
 import os
-import sys
 import urllib.request
 import webbrowser
 
@@ -31,7 +40,7 @@ binding_key = False
 waiting_for_release = False
 
 # Update
-APP_VERSION = "1.2"
+APP_VERSION = "1.3"
 
 GITHUB_OWNER = "Birkhol"
 GITHUB_REPO = "AutoClicker"
@@ -302,9 +311,8 @@ def start_update_check():
 root = tk.Tk()
 
 root.title("Auto Clicker")
-root.minsize(200, 200)
-root.maxsize(600, 500)
-root.geometry("400x260+50+50")
+root.minsize(300, 210)
+root.resizable(True, True)
 
 root.columnconfigure(
     0,
@@ -656,7 +664,7 @@ update_button = ctk.CTkButton(
 update_button.grid(
     row=5,
     column=0,
-    pady=5
+    pady=(5, 10)
 )
 
 update_button.grid_remove()

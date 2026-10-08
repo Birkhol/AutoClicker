@@ -40,7 +40,7 @@ binding_key = False
 waiting_for_release = False
 
 # Update
-APP_VERSION = "1.3"
+APP_VERSION = "1.4"
 
 GITHUB_OWNER = "Birkhol"
 GITHUB_REPO = "AutoClicker"
@@ -478,6 +478,10 @@ def update_status():
             fg="red"
         )
 
+def unfocus_entry(event):
+    if event.widget != entry:
+        root.focus_set()
+
 
 # --------------------------
 # Keyboard Controls
@@ -636,6 +640,7 @@ entry.insert(
     str(delay)
 )
 
+root.bind("<Button-1>", unfocus_entry)
 
 submit_button = tk.Button(
     input_frame,
